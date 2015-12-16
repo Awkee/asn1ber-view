@@ -41,7 +41,7 @@ usage()
  * \return int    0:成功，其他失败
  *
  */
-int GetOpt( int argc, char *argv[] , int *skip_head , int *skip_rec , int *argv_idx )
+int get_opt( int argc, char *argv[] , int *skip_head , int *skip_rec , int *argv_idx )
 {
     int c,ret;
     ret = 0;
@@ -171,8 +171,8 @@ int main(int argc , char *argv[] )
 		usage();
 		exit(1);
 	}
-    ret = GetOpt(argc, argv, &skip_head , &skip_rec, &argv_index );
-    ASSERT(ret == 0 , "Getopt error!\n");
+    ret = get_opt(argc, argv, &skip_head , &skip_rec, &argv_index );
+    ASSERT(ret == 0 , "get_opt error!\n");
 
     buff_size = 0;
     pbuff  = NULL;
