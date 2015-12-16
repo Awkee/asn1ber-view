@@ -1,3 +1,11 @@
+/*
+ *     asn1ber  Asn.1 BER simple decode tools for C programing language.
+ *
+ *     Copyright (C) 2015  next4nextjob(at)gmail(dot)com
+ *     See LICENSE for licensing information
+ * 
+ */
+
 /**
 *   定义解析ASN.1编码规范中的BER编码规则内容
 

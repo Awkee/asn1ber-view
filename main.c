@@ -1,5 +1,9 @@
-/**
-    测试ASN.1编码规则解析
+/*
+    asn1ber  Asn.1 BER simple decode tools for C programing language.
+
+    Copyright (C) 2015  next4nextjob(at)gmail(dot)com
+    See LICENSE for licensing information
+
 */
 
 #include <stdio.h>

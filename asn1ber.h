@@ -1,3 +1,11 @@
+/*
+    asn1ber  Asn.1 BER simple decode tools for C programing language.
+
+    Copyright (C) 2015  next4nextjob(at)gmail(dot)com
+    See LICENSE for licensing information
+
+*/
+
 #ifndef ASN1BER_H_INCLUDED
 #define ASN1BER_H_INCLUDED
 
@@ -49,3 +57,4 @@ int asn1ber_tag_dec(const void *data, tag_t *tag_value ,int *tag_len, int *is_le
 int asn1ber_len_dec(const void *data, len_t *len_value ,int *len);
 
 #endif // ASN1BER_H_INCLUDED
+
