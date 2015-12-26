@@ -14,18 +14,37 @@
 
 #include "asn1ber.h"
 
-char *usage_opt[] = {
-"Usage : ",
-"   asn1ber [-h split_head_len] [-r skip_record_len] file ...",
-"       -h 跳过文件头开始的字节数，仅执行一次",
-"       -r 跳过话单头记录的长度，每次读一条话单前都执行一次",
-"",
-NULL
+/*
+ * 缓存解析一个节点内容的所有信息
+ */
+char tree_buf[ 1024 * 8 ] ; 
+#define USAGE_STR       "   asn1ber [-h split_head_len] [-r skip_record_len] [-t grep_tag -g grep_string] file ..."
+
+char *usage_opt_en[] = {
+        "Usage : ",
+        USAGE_STR,
+        "       -h skip file fixed header n bytes",
+        "       -r skip record fixed header m bytes",
+        "       -t the tag node tree you want to grep",
+		"       -g the text value you want to grep",
+        "",
+        NULL
+};
+
+char *usage_opt_zh[] = {
+        "命令介绍:",
+        USAGE_STR,
+        "       -h 跳过文件头开始的字节数，仅执行一次",
+        "       -r 跳过话单头记录的长度，每次读一条话单前都执行一次",
+        "		-t 想要查找的tag节点树",
+        "		-g 想要查找的文本信息,需要跟-t参数一起使用",
+        "",
+        NULL
 };
 void
 usage()
 {
-    char **p = usage_opt;
+    char **p = usage_opt_en;
     while( *p != NULL ){
         fprintf(stdout,"%s\n",*p++);
 	}
@@ -37,17 +56,19 @@ usage()
  * \param argv[] char*      参数值数组表
  * \param skip_head int*    输出跳过的文件头部字节数
  * \param skip_rec int*     输出每次读取根节点前需要跳过的字节数
+ * \param grep_tag int*		需要查找的tag节点树
+ * \param grep_value char*	查找匹配的字符串信息
  * \param argv_idx int*     需要处理的参数索引下标
  * \return int    0:成功，其他失败
  *
  */
-int get_opt( int argc, char *argv[] , int *skip_head , int *skip_rec , int *argv_idx )
+int get_opt( int argc, char *argv[] , int *skip_head , int *skip_rec , int *grep_tag, char *grep_value , int *argv_idx )
 {
     int c,ret;
     ret = 0;
     *skip_head = 0;
     *skip_rec  = 0;
-    while ((c = getopt (argc, argv, "h:r:")) != -1)
+    while ((c = getopt (argc, argv, "h:r:t:g:")) != -1)
     {
         switch ( c )
         {
@@ -57,6 +78,16 @@ int get_opt( int argc, char *argv[] , int *skip_head , int *skip_rec , int *argv
         case 'r':
             *skip_rec = atoi( optarg);
             break;
+        case 't':
+            *grep_tag = atoi( optarg);/*grep the *grep_tag node's value info */
+			debug("grep_tag:%d\n",*grep_tag);
+            break;
+        case 'g':
+			memset( grep_value, 0, sizeof(grep_value) );
+            strcpy(grep_value ,optarg);/* grep value string */
+			debug("grep_value:%s\n", grep_value);
+            break;
+
         default:
             debug("Unknown option character `\\x%x'.\n",optopt);
 			usage();
@@ -64,6 +95,13 @@ int get_opt( int argc, char *argv[] , int *skip_head , int *skip_rec , int *argv
             break;
         }
     }
+	if ( ( *grep_tag > 0 && grep_value[0] == 0 ) 
+		|| ( grep_value[0] != 0 && (*grep_tag) == 0 ) 
+	   )
+	{
+		fprintf(stderr, "the -t and -g param should be set in the command!\n");
+		ret = -1;
+	}
     *argv_idx = optind;
     return ret;
 }
@@ -96,13 +134,16 @@ unsigned long get_file_size(const char *path)
  * \return void
  *
  */
-void print_ln( int level, int l_tag, int l_len , int offset, FILE *fp )
+void print_ln( int level, int l_tag, int l_len , int offset, char *rec_buf )
 {
     int i ;
+	char *p_rec_buf = rec_buf;
     if( level > 0 )
         for( i = 0; i < level ; i++)
-            fprintf( fp , "\t");
-    fprintf(fp,"%d,%d,%06d," , l_tag, l_len, offset);
+            sprintf( p_rec_buf ++ , "\t");
+    sprintf(p_rec_buf ,"%d,%d,%06d," , l_tag, l_len, offset);
+	debug("current_buf:[%s]\n", rec_buf);
+	p_rec_buf = rec_buf + strlen( p_rec_buf);
 }
 
 /** \brief 展现BER编码指定组节点内所有节点信息(递归实现)
@@ -112,14 +153,16 @@ void print_ln( int level, int l_tag, int l_len , int offset, FILE *fp )
  * \param offset int 文件位置偏移量
  * \param level int 递归级别(层数)
  * \param fp FILE*  结果输出文件指针(如果fp=NULL,默认输出到标准输出stdout显示)
+ * \param rec_buf char* 存储记录解析结果
  * \return int  0:执行成功,否则失败
  *
  */
-int show_record(const void *data , int len ,int offset, int level , FILE *fp )
+int show_record(const void *data , int len ,int offset, int level , FILE *fp , char *rec_buf )
 {
     int ret = 0;
     int is_leaf = NO;
     int pos =0,len_tag,len_len,l_tag,l_len,i;
+	char *p_rec_buf = rec_buf;
     const unsigned char *pbuff = data;
     if( fp == NULL)
     {
@@ -131,25 +174,26 @@ int show_record(const void *data , int len ,int offset, int level , FILE *fp )
         pos += len_tag;
         asn1ber_len_dec(pbuff + pos  , (len_t *)&l_len , &len_len );
         pos += len_len ;
-        print_ln(level, l_tag, l_len, offset + pos - len_tag - len_len , fp );
+        print_ln(level, l_tag, l_len, offset + pos - len_tag - len_len , p_rec_buf );
+		p_rec_buf = rec_buf + strlen( rec_buf );
         if( is_leaf == YES )
         {
-
             for( i = 0; i < l_len; i++)
             {
-                fprintf( fp , "%02X",*(pbuff + pos + i ) );
+				sprintf( p_rec_buf , "%02X" , *(pbuff + pos + i ) );
+				p_rec_buf += 2;
             }
-            fprintf( fp , "\n" );
-
-            //fprintf(fp,"leaf\n");
+			strcpy(p_rec_buf , "\n");
+			p_rec_buf ++;
         }
         else
         {
-            fprintf( fp , "\n" );
-            show_record(pbuff + pos , l_len ,offset + pos , level + 1, fp );
+            strcpy(p_rec_buf , "\n");
+			p_rec_buf ++;
+            show_record(pbuff + pos , l_len ,offset + pos , level + 1, fp , p_rec_buf );
+			p_rec_buf = rec_buf + strlen( rec_buf );
         }
         pos += l_len;
-        //fprintf(stdout, "tag:%d,tag_len:%d,length_value:%d, length_len:%d,is_leaf:%d\n", l_tag, len_tag , l_len , len_len , is_leaf );
     }
     return ret;
 }
@@ -162,8 +206,9 @@ int main(int argc , char *argv[] )
     *       循环定长:循环跳过
     */
     unsigned char *pbuff;
+	char grep_value[1024];
     int ret,read_len,pos, tag_len ,len, is_leaf ;
-    int i,skip_head, skip_rec, argv_index,file_size,buff_size;
+    int i, grep_tag ,skip_head, skip_rec, argv_index,file_size,buff_size;
     len_t asn_len;
     tag_t asn_tag;
     FILE *fp;
@@ -171,7 +216,9 @@ int main(int argc , char *argv[] )
 		usage();
 		exit(1);
 	}
-    ret = get_opt(argc, argv, &skip_head , &skip_rec, &argv_index );
+	skip_head = skip_rec = grep_tag = 0;
+	memset( grep_value, 0, sizeof(grep_value) );
+    ret = get_opt(argc, argv, &skip_head , &skip_rec, &grep_tag , grep_value , &argv_index );
     ASSERT(ret == 0 , "get_opt error!\n");
 
     buff_size = 0;
@@ -208,12 +255,20 @@ int main(int argc , char *argv[] )
             {
                 if( skip_rec > 0 )
                     pos += skip_rec;
-                ret = asn1ber_tag_dec(pbuff + pos, &asn_tag , &tag_len , &is_leaf , NULL );
-                pos += tag_len;
-                ret = asn1ber_len_dec(pbuff + pos  , &asn_len , &len );
-                pos += len;
-                fprintf( stdout , "%d,%d,%06d\n",asn_tag, asn_len, pos - tag_len - len );
-                show_record( pbuff + pos , asn_len ,pos , 1 , NULL );
+				ret = asn1ber_tag_dec(pbuff + pos, &asn_tag , &tag_len , &is_leaf , NULL );
+				pos += tag_len;
+				ret = asn1ber_len_dec(pbuff + pos  , &asn_len , &len );
+				pos += len;
+				sprintf( tree_buf , "%d,%d,%06d\n",asn_tag, asn_len, pos - tag_len - len );
+                show_record( pbuff + pos , asn_len , pos , 1 , NULL , tree_buf + strlen(tree_buf) );
+				if( grep_tag == asn_tag )
+				{
+					if( strstr( tree_buf, grep_value ) )
+					{
+						fprintf( stdout, "%s\n" , tree_buf );
+					}
+				}
+				else
                 pos += asn_len;
             }
         }

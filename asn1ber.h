@@ -15,18 +15,18 @@
 #ifndef DEBUG
     #define debug( ...)
     #define DEBUG_BER_DECODE( ...)
-    #define ASSERT( X,Y)
 #else
     #define debug( ... ) fprintf( stderr, __VA_ARGS__)
     #define DEBUG_BER_DECODE( ... ) fprintf( stderr, __VA_ARGS__)
+#endif
+
     #define ASSERT( X, Y) do {    \
     if( !(X) )                  \
     {                           \
         fprintf(stderr, "[ASSERT]:File:%s, Line:%d, Function:%s,%s\n", __FILE__, __LINE__ ,__FUNCTION__, (Y ));   \
+		exit(1);				\
     }                           \
 }while ( 0 )
-
-#endif // DEBUG
 
 #define YES 0
 #define NO  1
