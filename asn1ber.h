@@ -34,23 +34,23 @@
 typedef  unsigned int  len_t;
 typedef  unsigned int  tag_t;
 
-/** \brief ½âÎöBER±àÂë¹æÔòµÄtag½ÚµãÖµ
+/** \brief è§£æBERç¼–ç è§„åˆ™çš„tagèŠ‚ç‚¹å€¼
  *
- * \param data const void* ÊäÈëÔ­Ê¼Êı¾İ
- * \param tag_value unsigned int* Êä³ötagÖµ
- * \param tag_len int* tagÖµÕ¼ÓÃ×Ö½ÚÊı
- * \param is_leaf int* Êä³öÊÇ·ñÎªÔ­×Ó½ÚµãYES/NO
- * \param label char*   ±êÊ¶Êı¾İ±êÇ©ÀàĞÍ£¬²ÎÊı¿ÉÒÔÎªNULL
- * \return int 0±íÊ¾Ö´ĞĞ³É¹¦£¬·ñÔò±íÊ¾½âÎö´íÎó
+ * \param data const void* è¾“å…¥åŸå§‹æ•°æ®
+ * \param tag_value unsigned int* è¾“å‡ºtagå€¼
+ * \param tag_len int* tagå€¼å ç”¨å­—èŠ‚æ•°
+ * \param is_leaf int* è¾“å‡ºæ˜¯å¦ä¸ºåŸå­èŠ‚ç‚¹YES/NO
+ * \param label char*   æ ‡è¯†æ•°æ®æ ‡ç­¾ç±»å‹ï¼Œå‚æ•°å¯ä»¥ä¸ºNULL
+ * \return int 0è¡¨ç¤ºæ‰§è¡ŒæˆåŠŸï¼Œå¦åˆ™è¡¨ç¤ºè§£æé”™è¯¯
  *
  */
 int asn1ber_tag_dec(const void *data, tag_t *tag_value ,int *tag_len, int *is_leaf , char *label);
 
-/** \brief ½âÎöBER±àÂë¹æÔòµÄlength½ÚµãÖµ
+/** \brief è§£æBERç¼–ç è§„åˆ™çš„lengthèŠ‚ç‚¹å€¼
  *
- * \param data const void*  ÊäÈëÔ­Ê¼Êı¾İ
- * \param len_value unsigned int* ½âÎöºóµÄ³¤¶ÈÖµ
- * \param len int*  ³¤¶È½ÚµãÕ¼ÓÃ×Ö½ÚÊı
+ * \param data const void*  è¾“å…¥åŸå§‹æ•°æ®
+ * \param len_value unsigned int* è§£æåçš„é•¿åº¦å€¼
+ * \param len int*  é•¿åº¦èŠ‚ç‚¹å ç”¨å­—èŠ‚æ•°
  * \return int
  *
  */

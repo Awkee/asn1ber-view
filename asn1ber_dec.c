@@ -7,11 +7,11 @@
  */
 
 /**
-*   ¶¨Òå½âÎöASN.1±àÂë¹æ·¶ÖĞµÄBER±àÂë¹æÔòÄÚÈİ
+*   å®šä¹‰è§£æASN.1ç¼–ç è§„èŒƒä¸­çš„BERç¼–ç è§„åˆ™å†…å®¹
 
 *************************************************
-Êä³ö¼ÇÂ¼¸ñÊ½£º tag,length,offset,value
-Ê¾Àı£º
+è¾“å‡ºè®°å½•æ ¼å¼ï¼š tag,length,offset,value
+ç¤ºä¾‹ï¼š
 69,721,000054
 	0,1,000059,45
 	2,3,000062,425945
@@ -25,14 +25,14 @@
 
 #include "asn1ber.h"
 
-/** \brief ½âÎöBER±àÂë¹æÔòµÄtag½ÚµãÖµ
- *  tag > 31Ê±,
- * \param data const void* ÊäÈëÔ­Ê¼Êı¾İ
- * \param tag_value unsigned int* Êä³ötagÖµ
- * \param tag_len int* tagÖµÕ¼ÓÃ×Ö½ÚÊı
- * \param is_leaf int* Êä³öÊÇ·ñÎªÔ­×Ó½ÚµãYES/NO
- * \param label char*   ±êÊ¶Êı¾İ±êÇ©ÀàĞÍ£¬²ÎÊı¿ÉÒÔÎªNULL
- * \return int 0±íÊ¾Ö´ĞĞ³É¹¦£¬·ñÔò±íÊ¾½âÎö´íÎó
+/** \brief è§£æBERç¼–ç è§„åˆ™çš„tagèŠ‚ç‚¹å€¼
+ *  tag > 31æ—¶,
+ * \param data const void* è¾“å…¥åŸå§‹æ•°æ®
+ * \param tag_value unsigned int* è¾“å‡ºtagå€¼
+ * \param tag_len int* tagå€¼å ç”¨å­—èŠ‚æ•°
+ * \param is_leaf int* è¾“å‡ºæ˜¯å¦ä¸ºåŸå­èŠ‚ç‚¹YES/NO
+ * \param label char*   æ ‡è¯†æ•°æ®æ ‡ç­¾ç±»å‹ï¼Œå‚æ•°å¯ä»¥ä¸ºNULL
+ * \return int 0è¡¨ç¤ºæ‰§è¡ŒæˆåŠŸï¼Œå¦åˆ™è¡¨ç¤ºè§£æé”™è¯¯
  *
  */
 int asn1ber_tag_dec(const void *data, tag_t *tag_value ,int *tag_len, int *is_leaf , char *label)
@@ -41,7 +41,7 @@ int asn1ber_tag_dec(const void *data, tag_t *tag_value ,int *tag_len, int *is_le
     const unsigned char *p_char = (unsigned char *)data;
     *is_leaf = (*p_char & 0x20 ) == 0x20 ? NO:YES ;
     if( ((*p_char) & 0x1F)  == 0x1F )
-    {/*tagÖµ´óÓÚ31Çé¿ö*/
+    {/*tagå€¼å¤§äº31æƒ…å†µ*/
         *tag_value  = 0;
         DEBUG_BER_DECODE("tag_src1:[%02X]", *p_char);
         p_char ++;
@@ -55,7 +55,7 @@ int asn1ber_tag_dec(const void *data, tag_t *tag_value ,int *tag_len, int *is_le
         *tag_len = (int )(p_char - (unsigned char *)data + 1);
         DEBUG_BER_DECODE("[%02X],value:%d,tag_len:%d\n", *p_char, *tag_value, *tag_len);
     }else
-    {/*tagÖµ<=31Çé¿ö*/
+    {/*tagå€¼<=31æƒ…å†µ*/
         *tag_value = (*p_char) & 0x1F;
         *tag_len = 1;
         DEBUG_BER_DECODE("tag_src2:[%02X],value:%d,tag_len:%d\n",*p_char, *tag_value, *tag_len );
@@ -65,11 +65,11 @@ int asn1ber_tag_dec(const void *data, tag_t *tag_value ,int *tag_len, int *is_le
     return ret;
 }
 
-/** \brief ½âÎöBER±àÂë¹æÔòµÄlength½ÚµãÖµ
+/** \brief è§£æBERç¼–ç è§„åˆ™çš„lengthèŠ‚ç‚¹å€¼
  *
- * \param data const void*  ÊäÈëÔ­Ê¼Êı¾İ
- * \param len_value unsigned int* ½âÎöºóµÄ³¤¶ÈÖµ
- * \param len int*  ³¤¶È½ÚµãÕ¼ÓÃ×Ö½ÚÊı
+ * \param data const void*  è¾“å…¥åŸå§‹æ•°æ®
+ * \param len_value unsigned int* è§£æåçš„é•¿åº¦å€¼
+ * \param len int*  é•¿åº¦èŠ‚ç‚¹å ç”¨å­—èŠ‚æ•°
  * \return int
  *
  */
@@ -78,9 +78,9 @@ int asn1ber_len_dec(const void *data, len_t *len_value ,int *len)
     int ret = 0,i;
     const unsigned char *p_char = (const unsigned char *)data;
     if( *p_char > 127 )
-    {/*³¤±àÂë¸ñÊ½*/
+    {/*é•¿ç¼–ç æ ¼å¼*/
         *len_value = 0;
-        *len = *p_char & 0x7F;/*³¤¶ÈÖµµÄ³¤¶È*/
+        *len = *p_char & 0x7F;/*é•¿åº¦å€¼çš„é•¿åº¦*/
         DEBUG_BER_DECODE("ber_len:[%02X]",*p_char);
         p_char++;
         for( i = 0; i < *len ; i++ )
@@ -88,11 +88,11 @@ int asn1ber_len_dec(const void *data, len_t *len_value ,int *len)
             *len_value = ((*len_value) << 8) + (*(p_char+i));
             DEBUG_BER_DECODE(",[%02X]",(*(p_char+i)));
         }
-        *len += 1;/*×Ü³¤¶È¼ÓÒ»¸ö×Ö½ÚµÄÊ××Ö½Ú¾ÍÊÇ³¤¶È±àÂë×Ü³¤¶È*/
+        *len += 1;/*æ€»é•¿åº¦åŠ ä¸€ä¸ªå­—èŠ‚çš„é¦–å­—èŠ‚å°±æ˜¯é•¿åº¦ç¼–ç æ€»é•¿åº¦*/
         DEBUG_BER_DECODE(", len:[%d],len_value:[%d]\n" , *len , *len_value );
     }
     else
-    {/*¶Ì±àÂë¸ñÊ½£¬³¤¶È<=127*/
+    {/*çŸ­ç¼–ç æ ¼å¼ï¼Œé•¿åº¦<=127*/
         *len_value = *p_char ;
         *len = 1;
         DEBUG_BER_DECODE("ber_len:[%02X], len:[%d],len_value:[%d]\n", *p_char , *len , *len_value );
